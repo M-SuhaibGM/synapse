@@ -403,15 +403,177 @@ main {
   letter-spacing: 0.03em;
 }
 
+/* Wavy-line background (HeroLines): fills the Hero, behind its copy and art.
+   pointer-events: none keeps the text and links clickable. */
+.hero-lines {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.hero-hint {
+  position: absolute;
+  bottom: 42px;
+  left: 50%;
+  margin: 0;
+  color: #777987;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
 .hero-footer span:last-child span {
   margin-left: 8px;
   color: var(--cyan);
 }
 
+/* Services: pinned horizontal scroll. The track is 15vw padding + 6 cards × 70vw +
+   5 gaps × 4vw, and slides 370vw in total (first card centered → last card
+   centered), so the section is one screen + 370vw tall: vertical scroll distance
+   matches the horizontal distance. Update this if the card count or sizes change. */
 .services {
+  position: relative;
+  height: calc(100vh + 370vw);
+}
+
+.services__sticky {
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 110px 0 44px;
   background:
     radial-gradient(ellipse at 83% 30%, rgb(76 201 240 / 5%), transparent 30rem),
     linear-gradient(180deg, transparent, rgb(255 255 255 / 1.2%), transparent);
+}
+
+.services__heading,
+.services__progress {
+  padding: 0 max(56px, calc((100vw - 1440px) / 2));
+}
+
+.services__heading h2 {
+  margin: 18px 0 0;
+  font-size: clamp(30px, 3.6vw, 52px);
+  font-weight: 450;
+  letter-spacing: -0.065em;
+  line-height: 1.05;
+}
+
+.services__viewport {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  align-items: center;
+}
+
+.services__track {
+  position: relative; /* offsetLeft of the cards is measured from here */
+  display: flex;
+  height: min(100%, 560px);
+  gap: 4vw;
+  padding: 28px 15vw;
+  will-change: transform;
+}
+
+.service-card {
+  position: relative;
+  display: flex;
+  width: 70vw;
+  flex: none;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  padding: clamp(22px, 3vw, 44px);
+  background:
+    radial-gradient(ellipse at 90% 0%, rgb(123 47 247 / 14%), transparent 60%),
+    rgb(10 12 20 / 78%);
+  backdrop-filter: blur(10px);
+}
+
+.service-card__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: #777987;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+
+.service-card__number {
+  color: var(--cyan);
+}
+
+.service-card__ghost {
+  position: absolute;
+  right: 3vw;
+  bottom: -0.18em;
+  color: rgb(255 255 255 / 4%);
+  font-size: clamp(120px, 22vw, 340px);
+  font-weight: 600;
+  letter-spacing: -0.08em;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.service-card__body {
+  position: relative;
+  max-width: 620px;
+}
+
+.service-card h3 {
+  margin: 0;
+  font-size: clamp(30px, 4.6vw, 72px);
+  font-weight: 450;
+  letter-spacing: -0.06em;
+  line-height: 1;
+}
+
+.service-card p {
+  margin: 18px 0 0;
+  color: #9a9caa;
+  font-size: clamp(13px, 1.2vw, 16px);
+  line-height: 1.6;
+}
+
+.services__progress {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  color: #777987;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+
+.services__counter span {
+  color: var(--foreground);
+}
+
+.services__bar {
+  position: relative;
+  height: 1px;
+  flex: 1;
+  background: var(--line);
+}
+
+/* scaleX from the left edge: 0 = empty, 1 = full width. */
+.services__bar-fill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  transform: scaleX(0);
+  transform-origin: left center;
 }
 
 .section-heading h2 {
@@ -426,51 +588,12 @@ main {
   color: #777987;
 }
 
-.service-list {
-  margin-top: 52px;
-  border-top: 1px solid var(--line);
-}
-
-.service-row {
-  display: grid;
-  min-height: 102px;
-  grid-template-columns: 72px minmax(260px, 1fr) minmax(180px, 0.5fr) 24px;
-  align-items: center;
-  gap: 20px;
-  border-bottom: 1px solid var(--line);
-}
-
-.service-number,
-.service-tags,
 .project-meta p,
 .project-number {
   color: #777987;
   font-family: var(--font-geist-mono), monospace;
   font-size: 9px;
   letter-spacing: 0.04em;
-}
-
-.service-main h3 {
-  margin: 0;
-  font-size: 19px;
-  font-weight: 450;
-  letter-spacing: -0.035em;
-}
-
-.service-main p {
-  margin: 7px 0 0;
-  color: #858794;
-  font-size: 11px;
-  line-height: 1.6;
-}
-
-.service-tags {
-  justify-self: end;
-}
-
-.service-arrow {
-  color: var(--cyan);
-  font-size: 14px;
 }
 
 .section-footnote .accent {
@@ -644,6 +767,204 @@ main {
   padding-bottom: 2px;
 }
 
+/* Disciplines: 200vh of scroll; the inner box sticks for one screen while the
+   letters fly into place. perspective makes 3D transforms on the letters look 3D
+   (nearer = bigger); without it, z and rotateX/Y would look flat. */
+.disciplines {
+  position: relative;
+  height: 200vh;
+}
+
+.disciplines__sticky {
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0 max(56px, calc((100vw - 1440px) / 2));
+  background: var(--background);
+  perspective: 1000px;
+}
+
+/* Faint concentric rings: a radial gradient that repeats every 90px (a 1px line
+   each time), faded out toward the edges by a radial mask. */
+.disciplines__rings {
+  position: absolute;
+  inset: 0;
+  background: repeating-radial-gradient(
+    circle at 50% 50%,
+    transparent 0 89px,
+    rgb(76 201 240 / 9%) 89px 90px
+  );
+  mask-image: radial-gradient(circle at 50% 50%, #000 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.disciplines__label {
+  position: absolute;
+  top: 120px;
+  left: max(56px, calc((100vw - 1440px) / 2));
+}
+
+.disciplines__title {
+  position: relative;
+  margin: 0;
+  font-size: clamp(44px, 8.4vw, 136px);
+  font-weight: 500;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  text-align: center;
+  transform-style: preserve-3d;
+}
+
+.disciplines__word {
+  white-space: nowrap;
+}
+
+.disciplines__dot {
+  color: var(--cyan);
+}
+
+@media (max-width: 900px) {
+  .disciplines__sticky {
+    padding: 0 32px;
+  }
+
+  .disciplines__label {
+    left: 32px;
+  }
+}
+
+/* Testimonials: one screen + 80vh per card change (4 cards → 3 changes). The deck
+   has perspective so translateZ/rotateX on the cards look 3D. */
+.testimonials {
+  position: relative;
+  height: calc(100vh + 3 * 80vh);
+}
+
+.testimonials__sticky {
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 110px max(56px, calc((100vw - 1440px) / 2)) 56px;
+  background:
+    radial-gradient(ellipse at 50% 60%, rgb(123 47 247 / 9%), transparent 38rem),
+    var(--background);
+}
+
+.testimonials__heading h2 {
+  margin: 18px 0 0;
+  font-size: clamp(30px, 3.6vw, 52px);
+  font-weight: 450;
+  letter-spacing: -0.065em;
+  line-height: 1.05;
+}
+
+.testimonials__deck {
+  position: relative;
+  display: grid;
+  flex: 1;
+  place-items: center;
+  perspective: 1200px;
+}
+
+.testimonial-card {
+  position: absolute;
+  display: flex;
+  width: min(760px, 100%);
+  min-height: min(380px, 52vh);
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 28px;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  padding: clamp(26px, 3.4vw, 48px);
+  background:
+    radial-gradient(ellipse at 0% 0%, rgb(76 201 240 / 12%), transparent 55%),
+    #0b0d16;
+  box-shadow: 0 30px 80px rgb(0 0 0 / 45%);
+  /* Rotate around the bottom edge, so rotateX tips the card back like a page. */
+  transform-origin: 50% 100%;
+}
+
+.testimonial-card__mark {
+  color: var(--cyan);
+  font-size: 64px;
+  line-height: 0.6;
+}
+
+.testimonial-card blockquote {
+  margin: 0;
+  font-size: clamp(22px, 2.6vw, 36px);
+  font-weight: 450;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+}
+
+.testimonial-card figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: #777987;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.testimonial-card figcaption > span:first-child {
+  color: var(--foreground);
+}
+
+.testimonial-card__index {
+  margin-left: auto;
+}
+
+@media (max-width: 900px) {
+  .testimonials__sticky {
+    padding: 92px 22px 40px;
+  }
+}
+
+/* Showreel: 400vh of scroll; the inner box sticks to the screen for the whole
+   stretch while the canvas scrubs through the frames. */
+.showreel {
+  position: relative;
+  height: 400vh;
+}
+
+.showreel__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--background);
+}
+
+.showreel__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.showreel__label {
+  position: absolute;
+  top: 120px;
+  left: max(56px, calc((100vw - 1440px) / 2));
+}
+
+@media (max-width: 900px) {
+  .showreel__label {
+    left: 32px;
+  }
+}
+
 .contact {
   min-height: 100svh;
   justify-content: space-between;
@@ -749,9 +1070,9 @@ main {
     left: 32px;
   }
 
-  .service-row {
-    grid-template-columns: 42px minmax(220px, 1fr) minmax(150px, 0.5fr) 20px;
-    gap: 12px;
+  .services__heading,
+  .services__progress {
+    padding: 0 32px;
   }
 
   .project-grid {
@@ -829,27 +1150,18 @@ main {
     font-size: clamp(40px, 11vw, 62px);
   }
 
-  .service-list {
-    margin-top: 38px;
+  .services__sticky {
+    padding: 92px 0 32px;
   }
 
-  .service-row {
-    min-height: 119px;
-    grid-template-columns: 30px minmax(0, 1fr) 18px;
-    gap: 8px;
+  .services__heading,
+  .services__progress {
+    padding: 0 22px;
   }
 
-  .service-main h3 {
-    font-size: 17px;
-  }
-
-  .service-main p {
-    max-width: 280px;
-    font-size: 10px;
-  }
-
-  .service-tags {
-    display: none;
+  .service-card__top {
+    flex-direction: column;
+    gap: 6px;
   }
 
   .work-heading {
@@ -899,7 +1211,20 @@ main {
   }
 }
 
+@media (max-width: 640px) {
+  /* Sit above the footer row, which has no room for a third item on phones. */
+  .hero-hint {
+    bottom: 50px;
+    font-size: 8px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  /* The lines are a still drawing then, so there's nothing to touch. */
+  .hero-hint {
+    display: none;
+  }
+
   *,
   *::before,
   *::after {

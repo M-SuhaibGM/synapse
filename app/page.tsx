@@ -1,36 +1,17 @@
+import Disciplines from "@/components/Disciplines";
+import HeroLines from "@/components/HeroLines";
 import HeroTitle from "@/components/HeroTitle";
 import MagneticLink from "@/components/MagneticLink";
 import SectionLabel from "@/components/SectionLabel";
+import Services from "@/components/Services";
+import Showreel from "@/components/Showreel";
+import Testimonials from "@/components/Testimonials";
 import TiltCard from "@/components/TiltCard";
 
 const navigation = [
   { label: "Services", href: "#services" },
   { label: "Work", href: "#work" },
   { label: "Contact", href: "#contact" },
-];
-
-const services = [
-  {
-    number: "01",
-    name: "AI experiences",
-    description:
-      "Intelligent products that feel intuitive, useful, and unmistakably human.",
-    tags: "PRODUCT STRATEGY · AI UX",
-  },
-  {
-    number: "02",
-    name: "Digital products",
-    description:
-      "From first sketch to final pixel, we turn ambitious ideas into useful tools.",
-    tags: "DESIGN · DEVELOPMENT",
-  },
-  {
-    number: "03",
-    name: "Creative technology",
-    description:
-      "New ways to tell stories, connect systems, and make the complex feel simple.",
-    tags: "PROTOTYPING · R&D",
-  },
 ];
 
 const projects = [
@@ -77,6 +58,7 @@ export default function Home() {
       </header>
 
       <section aria-labelledby="hero-title" className="section hero" id="hero">
+        <HeroLines />
         <div className="hero-copy">
           <p className="eyebrow"><span className="status-dot" /> Independent AI studio · Est. 2024</p>
           <HeroTitle />
@@ -104,39 +86,14 @@ export default function Home() {
           <span>Independent thinking, applied.</span>
           <span>Scroll to explore <span aria-hidden="true">↓</span></span>
         </div>
+        <p aria-hidden="true" className="hero-hint">
+          touch the lines · click &amp; hold to blast
+        </p>
       </section>
 
-      <section
-        aria-labelledby="services-title"
-        className="section services"
-        id="services"
-      >
-        <div className="section-heading">
-          <SectionLabel>01 / What we do</SectionLabel>
-          <h2 id="services-title">
-            Useful by design.
-            <br />
-            <span className="muted">Unexpected by nature.</span>
-          </h2>
-        </div>
-        <div className="service-list">
-          {services.map((service) => (
-            <article className="service-row" key={service.number}>
-              <span className="service-number">{service.number}</span>
-              <div className="service-main">
-                <h3>{service.name}</h3>
-                <p>{service.description}</p>
-              </div>
-              <span className="service-tags">{service.tags}</span>
-              <span aria-hidden="true" className="service-arrow">↗</span>
-            </article>
-          ))}
-        </div>
-        <div className="section-footnote">
-          <span>Good work starts with a good question.</span>
-          <span>Based everywhere <span className="accent">●</span></span>
-        </div>
-      </section>
+      <Services />
+
+      <Disciplines />
 
       <section aria-labelledby="work-title" className="section work" id="work">
         <div className="section-heading work-heading">
@@ -180,6 +137,10 @@ export default function Home() {
           <a href="#contact">Start a conversation <span aria-hidden="true">↗</span></a>
         </div>
       </section>
+
+      <Showreel />
+
+      <Testimonials />
 
       <section
         aria-labelledby="contact-title"
