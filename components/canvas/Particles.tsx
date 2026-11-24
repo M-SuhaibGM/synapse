@@ -19,6 +19,7 @@ import {
 import { sphere, text } from "@/lib/shapes";
 import { REDUCED_MOTION_QUERY, useMediaQuery } from "@/lib/media";
 import { useIntroStore, useScrollStore } from "@/lib/store";
+import { useTilt } from "@/lib/useTilt";
 
 type ParticlesProps = {
   count: number;
@@ -34,6 +35,9 @@ const SECTION_SHAPES: Array<(count: number) => Float32Array | Promise<Float32Arr
   (count) => sphere(count),
 ];
 const LAST_FROM_INDEX = SECTION_SHAPES.length - 2;
+// How far (local units) the particles slide against the tilt at full tilt.
+const PARALLAX_X = 0.18;
+const PARALLAX_Y = 0.12;
 
 // Building shapes (sampling the text surface) is slow, so do it once per particle
 // count and keep the result for the whole session, across remounts and quality changes.
@@ -405,6 +409,10 @@ export default function Particles({ count, onError }: ParticlesProps) {
     };
   }, []);
 
+  // Phone tilt, or the mouse on desktop (-1..1, smoothed). Called before useFrame below
+  // so it's already updated when that frame runs.
+  const tilt = useTilt();
+
   useFrame((state, delta) => {
     const geometry = geometryRef.current;
     const material = materialRef.current;
@@ -481,6 +489,11 @@ export default function Particles({ count, onError }: ParticlesProps) {
 
     // Canvas pixels = CSS pixels * device pixel ratio.
     material.uniforms.uScale.value = (height * dpr) / 2;
+
+    // Parallax: slide the particles a little against the tilt, while the glass around
+    // them turns with it. Layers moving by different amounts read as depth, as if the
+    // particles sat deeper inside the crystal. (useTilt is 0 under reduced motion.)
+    pointsRef.current.position.set(-tilt.current.x * PARALLAX_X, -tilt.current.y * PARALLAX_Y, 0);
 
     if (reduceMotion) return; // static: no idle rotation
     pointsRef.current.rotation.y += delta * 0.025;

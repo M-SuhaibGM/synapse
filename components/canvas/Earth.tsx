@@ -20,6 +20,8 @@ import {
 } from "three";
 import { REDUCED_MOTION_QUERY, useMediaQuery } from "@/lib/media";
 import { useScrollStore } from "@/lib/store";
+import { useDevice } from "@/lib/useDevice";
+import { useTilt } from "@/lib/useTilt";
 
 const RADIUS = 1.3;
 const CITIES = [
@@ -36,6 +38,12 @@ const ROUTES: Array<[number, number]> = [
 const FOCUS = { lat: 28, lng: 60 };
 const AUTO_SPIN = 0.05; // radians per second, a full turn every ~2 minutes
 const CLOUD_SPIN = 0.012; // extra spin of the clouds on top of the Earth's
+// Extra rotation (radians) at full phone tilt / mouse at the screen edge.
+const TILT_YAW = 0.35;
+const TILT_PITCH = 0.2;
+// Mobile: smaller, and centered on the .contact-globe slot below the Contact text.
+const MOBILE_SCALE = 0.8;
+const MOBILE_SLOT = ".contact-globe";
 
 // Latitude/longitude → a point on the sphere. Latitude tilts up from the equator,
 // longitude goes around it. This matches how three.js wraps a flat world map onto
@@ -53,6 +61,7 @@ function latLngToVector3(lat: number, lng: number, radius: number) {
 // Scratch vectors reused every frame (no allocations in the render loop).
 const screenCenter = new Vector3();
 const screenEdge = new Vector3();
+const worldPosition = new Vector3();
 const UP_Z = new Vector3(0, 0, 1);
 
 // Fixed "sun" direction in camera space (upper left, slightly in front), so the lit
@@ -169,10 +178,17 @@ export default function Earth() {
   const atmosphereRef = useRef<ShaderMaterial>(null);
   const arcRefs = useRef<Array<ShaderMaterial | null>>([]);
   const reduceMotion = useMediaQuery(REDUCED_MOTION_QUERY);
+  const { isMobile } = useDevice();
+  const slotRef = useRef<Element | null>(null);
+  useEffect(() => {
+    slotRef.current = document.querySelector(MOBILE_SLOT);
+  }, []);
 
   // Drag state: target angles set by the pointer, eased toward in useFrame.
   const dragRef = useRef({ active: false, x: 0, y: 0, yaw: 0, pitch: 0 });
   const angleRef = useRef({ auto: 0, yaw: 0, pitch: 0 });
+  // Phone tilt, or the mouse on desktop (-1..1, smoothed); turns the globe a little.
+  const tiltInput = useTilt();
 
   const uniforms = useMemo(
     () => ({
@@ -276,7 +292,25 @@ export default function Earth() {
       dragRef.current.active = false;
       return;
     }
-    root.scale.setScalar(MathUtils.lerp(0.4, 1, appear));
+    root.scale.setScalar(MathUtils.lerp(0.4, 1, appear) * (isMobile ? MOBILE_SCALE : 1));
+
+    // Mobile: move the globe up/down so it sits on the slot under the Contact text,
+    // following it as the page scrolls. The slot's center is turned into -1..1 screen
+    // units (+1 = top); getCurrentViewport gives how many world units tall the screen
+    // is at the globe's distance from the camera, which converts that into a y offset.
+    const slot = slotRef.current;
+    if (isMobile && slot) {
+      const rect = slot.getBoundingClientRect();
+      const screenY = 1 - ((rect.top + rect.height / 2) / state.size.height) * 2;
+      root.position.y = 0; // measure the depth from the unshifted position
+      const { height } = state.viewport.getCurrentViewport(
+        state.camera,
+        root.getWorldPosition(worldPosition),
+      );
+      root.position.y = (screenY * height) / 2;
+    } else {
+      root.position.y = 0;
+    }
     if (atmosphereRef.current) atmosphereRef.current.uniforms.uStrength.value = appear;
     arcRefs.current.forEach((arc) => {
       if (!arc) return;
@@ -291,8 +325,12 @@ export default function Earth() {
     if (!reduceMotion && !drag.active) angle.auto += delta * AUTO_SPIN;
     angle.yaw = MathUtils.damp(angle.yaw, drag.yaw, 8, delta);
     angle.pitch = MathUtils.damp(angle.pitch, drag.pitch, 8, delta);
-    tilt.rotation.x = MathUtils.degToRad(FOCUS.lat) + angle.pitch;
-    spin.rotation.y = -Math.PI / 2 - MathUtils.degToRad(FOCUS.lng) + angle.auto + angle.yaw;
+    // Tilting the phone right turns the globe's front toward the right, tilting it
+    // up turns the front up, as if the globe stayed level while the phone moved.
+    const { x: tiltX, y: tiltY } = tiltInput.current;
+    tilt.rotation.x = MathUtils.degToRad(FOCUS.lat) + angle.pitch - tiltY * TILT_PITCH;
+    spin.rotation.y =
+      -Math.PI / 2 - MathUtils.degToRad(FOCUS.lng) + angle.auto + angle.yaw + tiltX * TILT_YAW;
 
     if (!reduceMotion) {
       if (cloudsRef.current) cloudsRef.current.rotation.y += delta * CLOUD_SPIN;

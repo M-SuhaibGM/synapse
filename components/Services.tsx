@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SectionLabel from "./SectionLabel";
+import { MOBILE_QUERY } from "@/lib/useDevice";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -43,14 +44,19 @@ const services = [
 const pad = (n: number) => String(n).padStart(2, "0");
 const TOTAL = pad(services.length);
 
-// Pinned horizontal scroll: the section is tall (see .services in globals.css), its
-// inner box sticks to the screen, and scrolling down slides the card track left.
+// Desktop: pinned horizontal scroll. The section is tall (see .services in
+// globals.css), its inner box sticks to the screen, and scrolling down slides the
+// card track left.
+// Mobile (MOBILE_QUERY): no pinning. The viewport is a native, swipeable carousel
+// (overflow-x + scroll-snap in CSS) with dot indicators under it.
 export default function Services() {
   const sectionRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLSpanElement>(null);
   const counterRef = useRef<HTMLSpanElement>(null);
+  const [active, setActive] = useState(0);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -61,7 +67,10 @@ export default function Services() {
     if (!section || !sticky || !track || !bar || !counter) return;
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    const context = gsap.context(() => {
+    // matchMedia builds the pin only on desktop and reverts it (clearing the track's
+    // transform) when the window shrinks to mobile width.
+    const media = gsap.matchMedia(section);
+    media.add(`not all and ${MOBILE_QUERY}`, () => {
       // How far to slide: until the last card is centered on screen.
       const distance = () => {
         const last = track.lastElementChild as HTMLElement;
@@ -89,10 +98,41 @@ export default function Services() {
           counter.textContent = pad(Math.round(progress * (services.length - 1)) + 1);
         },
       });
-    }, section);
+    });
 
-    return () => context.revert();
+    return () => media.revert();
   }, []);
+
+  // Mobile carousel: the active dot is the card whose center is nearest the
+  // viewport's center.
+  const onCarouselScroll = useCallback(() => {
+    const viewport = viewportRef.current;
+    const track = trackRef.current;
+    if (!viewport || !track) return;
+    const center = viewport.scrollLeft + viewport.clientWidth / 2;
+    let nearest = 0;
+    let best = Infinity;
+    Array.from(track.children).forEach((child, index) => {
+      const card = child as HTMLElement;
+      const distance = Math.abs(card.offsetLeft + card.offsetWidth / 2 - center);
+      if (distance < best) {
+        best = distance;
+        nearest = index;
+      }
+    });
+    setActive(nearest);
+  }, []);
+
+  const goTo = (index: number) => {
+    const viewport = viewportRef.current;
+    const card = trackRef.current?.children[index] as HTMLElement | undefined;
+    if (!viewport || !card) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    viewport.scrollTo({
+      left: card.offsetLeft - (viewport.clientWidth - card.offsetWidth) / 2,
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
+  };
 
   return (
     <section aria-labelledby="services-title" className="services" id="services" ref={sectionRef}>
@@ -104,10 +144,21 @@ export default function Services() {
           </h2>
         </div>
 
-        <div className="services__viewport">
+        <div
+          aria-label="Services"
+          className="services__viewport"
+          onScroll={onCarouselScroll}
+          ref={viewportRef}
+          role="region"
+        >
           <div className="services__track" ref={trackRef}>
             {services.map((service, index) => (
-              <article className="service-card" key={service.name}>
+              <article
+                aria-label={`${index + 1} of ${services.length}`}
+                aria-roledescription="slide"
+                className="service-card"
+                key={service.name}
+              >
                 <div className="service-card__top">
                   <span className="service-card__number">{pad(index + 1)}</span>
                   <span className="service-card__tags">{service.tags}</span>
@@ -122,6 +173,19 @@ export default function Services() {
               </article>
             ))}
           </div>
+        </div>
+
+        <div className="services__dots">
+          {services.map((service, index) => (
+            <button
+              aria-current={index === active ? "true" : undefined}
+              aria-label={`Show ${service.name}`}
+              className="services__dot"
+              key={service.name}
+              onClick={() => goTo(index)}
+              type="button"
+            />
+          ))}
         </div>
 
         <div aria-hidden="true" className="services__progress">

@@ -3,12 +3,16 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { MOBILE_QUERY, useMediaQuery } from "@/lib/media";
+import { useDevice } from "@/lib/useDevice";
 import SectionLabel from "./SectionLabel";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const FRAME_COUNT = 130; // f_001 … f_130
+const FRAME_COUNT = 130; // f_001 … f_130 (1600px JPG, 20 fps)
+// Phones: /reel/m/ holds the reel re-extracted at 10 fps (every 2nd frame) and 720px
+// wide WebP — f_001 … f_065, about 0.6 MB in total.
+const MOBILE_FRAME_COUNT = 65;
+const MOBILE_FPS = 10;
 const COARSE_STEP = 8; // load every 8th frame first, then fill the gaps
 const CONCURRENCY = 6; // parallel image requests
 const MAX_DPR = 1.5;
@@ -25,10 +29,34 @@ function subjectX(seconds: number) {
   return 0.5 + 0.23 * eased;
 }
 
-const frameUrl = (frame: number) => `/reel/f_${String(frame).padStart(3, "0")}.jpg`;
+const pad3 = (value: number) => String(value).padStart(3, "0");
 
-// Decoded frames, kept for the session (across remounts and mobile/desktop switches).
-const frameCache = new Map<number, HTMLImageElement>();
+type Frame = { url: string; seconds: number };
+
+// The frames to scrub through, in order, with each one's time in the reel.
+function reelFrames(mobile: boolean, lite: boolean): Frame[] {
+  if (mobile) {
+    return Array.from({ length: MOBILE_FRAME_COUNT }, (_, index) => ({
+      url: `/reel/m/f_${pad3(index + 1)}.webp`,
+      seconds: index / MOBILE_FPS,
+    }));
+  }
+  // Lite (tablets, low-power): every 2nd frame (f_001, f_003, …), half the download.
+  return Array.from({ length: FRAME_COUNT }, (_, index) => index + 1)
+    .filter((frame) => !lite || frame % 2 === 1)
+    .map((frame) => ({ url: `/reel/f_${pad3(frame)}.jpg`, seconds: (frame - 1) / REEL_FPS }));
+}
+
+// Mobile captions, each fading in at its quarter of the scroll (0, 25, 50, 75%).
+const CAPTIONS = [
+  "Light, held in glass.",
+  "The crystal gives way.",
+  "A thousand points of signal.",
+  "Resolving into intelligence.",
+];
+
+// Decoded frames by URL, kept for the session (across remounts and mode switches).
+const frameCache = new Map<string, HTMLImageElement>();
 
 // Load order as indexes into the frame list: 0, 8, 16, … first, so the whole reel
 // can be scrubbed (coarsely) early on, then everything in between.
@@ -46,7 +74,11 @@ function loadOrder(count: number) {
 export default function Showreel() {
   const sectionRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const isMobile = useMediaQuery(MOBILE_QUERY);
+  const counterRef = useRef<HTMLSpanElement>(null);
+  const { isMobile, isTouch, lowPower } = useDevice();
+  // Phones, tablets and low-power devices: half the frames, 1x resolution. Phones
+  // additionally get the small WebP frames, captions and a frame counter.
+  const lite = isMobile || isTouch || lowPower;
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -54,11 +86,11 @@ export default function Showreel() {
     const context = canvas?.getContext("2d");
     if (!section || !canvas || !context) return;
 
-    // Mobile: every 2nd frame (f_001, f_003, …), half the download.
-    const frames = Array.from({ length: FRAME_COUNT }, (_, index) => index + 1).filter(
-      (frame) => !isMobile || frame % 2 === 1,
-    );
-    const images = frames.map((frame) => frameCache.get(frame) ?? null);
+    const frames = reelFrames(isMobile, lite);
+    const images = frames.map((frame) => frameCache.get(frame.url) ?? null);
+    const counter = counterRef.current;
+    const captions = Array.from(section.querySelectorAll<HTMLElement>(".showreel__caption"));
+    let caption = -1; // caption currently shown
     let target = 0; // frame index the scroll position asks for
     let drawn = -1; // frame index currently on the canvas
     let raf = 0;
@@ -84,10 +116,11 @@ export default function Showreel() {
       const scale = Math.max(canvas.width / image.naturalWidth, canvas.height / image.naturalHeight);
       const width = image.naturalWidth * scale;
       const height = image.naturalHeight * scale;
-      const focus = subjectX((frames[index] - 1) / REEL_FPS);
+      const focus = subjectX(frames[index].seconds);
       const x = Math.min(Math.max(canvas.width / 2 - focus * width, canvas.width - width), 0);
       context.drawImage(image, x, (canvas.height - height) / 2, width, height);
       drawn = index;
+      if (counter) counter.textContent = `${pad3(index + 1)} / ${pad3(frames.length)}`;
     };
     // At most one draw per animation frame, however many scroll/load events arrive.
     const requestDraw = () => {
@@ -96,7 +129,7 @@ export default function Showreel() {
 
     // Match the canvas's pixel buffer to its on-screen size (resizing clears it).
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio, MAX_DPR);
+      const dpr = lite ? 1 : Math.min(window.devicePixelRatio, MAX_DPR);
       canvas.width = Math.round(canvas.clientWidth * dpr);
       canvas.height = Math.round(canvas.clientHeight * dpr);
       context.imageSmoothingQuality = "high";
@@ -112,12 +145,20 @@ export default function Showreel() {
       trigger: section,
       start: "top top",
       end: "bottom bottom",
-      onUpdate: (self) => {
-        target = Math.round(self.progress * (frames.length - 1));
-        requestDraw();
-      },
+      onUpdate: (self) => update(self.progress),
     });
-    target = Math.round(trigger.progress * (frames.length - 1));
+    function update(progress: number) {
+      target = Math.round(progress * (frames.length - 1));
+      requestDraw();
+      // 0–25% → caption 0, 25–50% → 1, 50–75% → 2, 75–100% → 3.
+      const next = Math.min(Math.floor(progress * captions.length), captions.length - 1);
+      if (next !== caption) {
+        captions[caption]?.classList.remove("is-active");
+        captions[next]?.classList.add("is-active");
+        caption = next;
+      }
+    }
+    update(trigger.progress);
 
     const load = () => {
       const queue = loadOrder(frames.length).filter((index) => !images[index]);
@@ -126,13 +167,13 @@ export default function Showreel() {
         while (!cancelled && next < queue.length) {
           const index = queue[next++];
           const image = new Image();
-          image.src = frameUrl(frames[index]);
+          image.src = frames[index].url;
           try {
             await image.decode(); // fully decoded, so drawing it later never stalls
           } catch {
             continue; // skip a missing/broken frame; neighbours stand in for it
           }
-          frameCache.set(frames[index], image);
+          frameCache.set(frames[index].url, image);
           if (cancelled) return;
           images[index] = image;
           requestDraw(); // may be closer to the wanted frame than what's shown
@@ -141,15 +182,15 @@ export default function Showreel() {
       for (let lane = 0; lane < CONCURRENCY; lane += 1) void worker();
     };
 
-    // Start downloading once the section is within two screens, so the ~20 MB of
-    // frames doesn't compete with the first page load.
+    // Start downloading once the section is within two screens (one on phones), so
+    // the frames don't compete with the first page load.
     const nearObserver = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;
         nearObserver.disconnect();
         load();
       },
-      { rootMargin: "200% 0px" },
+      { rootMargin: isMobile ? "100% 0px" : "200% 0px" },
     );
     nearObserver.observe(section);
 
@@ -160,7 +201,7 @@ export default function Showreel() {
       resizeObserver.disconnect();
       nearObserver.disconnect();
     };
-  }, [isMobile]);
+  }, [lite, isMobile]);
 
   return (
     <section aria-label="Showreel" className="showreel" id="showreel" ref={sectionRef}>
@@ -174,6 +215,20 @@ export default function Showreel() {
         <div className="showreel__label">
           <SectionLabel>Showreel</SectionLabel>
         </div>
+        {isMobile && (
+          <>
+            <span aria-hidden="true" className="showreel__counter" ref={counterRef}>
+              {`001 / ${pad3(MOBILE_FRAME_COUNT)}`}
+            </span>
+            <div className="showreel__captions">
+              {CAPTIONS.map((text) => (
+                <p className="showreel__caption" key={text}>
+                  {text}
+                </p>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </section>
   );

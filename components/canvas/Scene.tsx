@@ -14,6 +14,7 @@ import { Perf } from "r3f-perf";
 import { MOBILE_PARTICLE_COUNT, PARTICLE_COUNT } from "@/lib/shapes";
 import { markSlowDevice, useIntroStore, useQualityStore, useSceneStore } from "@/lib/store";
 import { REDUCED_MOTION_QUERY, useMediaQuery } from "@/lib/media";
+import { useDevice } from "@/lib/useDevice";
 import CameraRig from "./CameraRig";
 import Earth from "./Earth";
 import HeroCrystal from "./HeroCrystal";
@@ -24,7 +25,7 @@ import SectionGroup from "./SectionGroup";
 // R3F and postprocessing stay out of the initial JS bundle.
 export default function Scene({ onError }: { onError: (message: string | null) => void }) {
   const lowQuality = useQualityStore((state) => state.quality === "low");
-  const isMobile = useQualityStore((state) => state.isMobile);
+  const { isMobile } = useDevice();
   const reduceMotion = useMediaQuery(REDUCED_MOTION_QUERY);
   // Start measuring only after the loader: building the shapes briefly blocks the main
   // thread, which would otherwise look like a slow device.
@@ -36,7 +37,7 @@ export default function Scene({ onError }: { onError: (message: string | null) =
     <Canvas
       // dpr = device pixel ratio: how many real pixels per CSS pixel to render.
       // 1.5 is sharper on retina screens but ~2.25x the pixels to fill.
-      dpr={lowQuality ? 1 : [1, 1.5]}
+      dpr={lowQuality || isMobile ? 1 : [1, 1.5]}
       gl={{ alpha: true, antialias: true }}
       // frameloop "never" = don't draw new frames; the last one stays on the canvas.
       frameloop={covered ? "never" : "always"}
@@ -69,7 +70,7 @@ export default function Scene({ onError }: { onError: (message: string | null) =
       <Stars
         radius={60}
         depth={40}
-        count={isMobile ? 1200 : 2400}
+        count={isMobile ? 600 : 2400}
         factor={3}
         saturation={0}
         fade
@@ -77,7 +78,7 @@ export default function Scene({ onError }: { onError: (message: string | null) =
       />
       {/* renderOrder 2: drawn after the glass, so sparkles in front of it aren't covered. */}
       <Sparkles
-        count={130}
+        count={isMobile ? 65 : 130}
         color="#4cc9f0"
         scale={[9, 6, 4]}
         size={2}

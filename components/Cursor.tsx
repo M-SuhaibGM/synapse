@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
+import { useDevice } from "@/lib/useDevice";
 
 // Elements that make the ring grow.
 const INTERACTIVE = "a, button, [role='button'], input, textarea, select, label";
@@ -10,13 +11,14 @@ const INTERACTIVE = "a, button, [role='button'], input, textarea, select, label"
 export default function Cursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
+  // Only with a mouse/trackpad: (hover: hover) and (pointer: fine). Touch screens
+  // keep the native behavior. Live, so plugging in a mouse turns it on.
+  const { finePointer } = useDevice();
 
   useEffect(() => {
     const dot = dotRef.current;
     const ring = ringRef.current;
-    if (!dot || !ring) return;
-    // Touch screens have no hovering pointer, so keep the native behavior there.
-    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    if (!dot || !ring || !finePointer) return;
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const root = document.documentElement;
@@ -73,8 +75,9 @@ export default function Cursor() {
       root.removeEventListener("pointerleave", onLeave);
       root.classList.remove("has-custom-cursor");
       gsap.killTweensOf([dot, ring]);
+      gsap.set([dot, ring], { autoAlpha: 0 });
     };
-  }, []);
+  }, [finePointer]);
 
   return (
     <>

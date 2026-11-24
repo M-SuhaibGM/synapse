@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import gsap from "gsap";
+import { useDevice } from "@/lib/useDevice";
 
 // Max tilt in degrees at the card's edges.
 const MAX_TILT = 10;
@@ -15,14 +16,14 @@ export default function TiltCard({
   children: ReactNode;
 }) {
   const cardRef = useRef<HTMLElement>(null);
+  const { finePointer } = useDevice();
 
   useEffect(() => {
     const card = cardRef.current;
     if (!card) return;
     // Only for real mouse/trackpad hover, and not when the user prefers less motion.
-    const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!canHover || reduceMotion) return;
+    if (!finePointer || reduceMotion) return;
 
     // transformPerspective gives the rotation depth (closer edge looks bigger).
     gsap.set(card, { transformPerspective: 900 });
@@ -52,7 +53,7 @@ export default function TiltCard({
       gsap.killTweensOf(card);
       gsap.set(card, { clearProps: "transform" });
     };
-  }, []);
+  }, [finePointer]);
 
   return (
     <article className={className} ref={cardRef}>

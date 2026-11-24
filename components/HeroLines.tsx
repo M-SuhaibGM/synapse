@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { REDUCED_MOTION_QUERY, useMediaQuery } from "@/lib/media";
+import { useDevice } from "@/lib/useDevice";
 
 const LINE_COUNT = 60;
 const POINT_SPACING = 14; // px between points along each line
@@ -47,6 +48,9 @@ type Line = {
 export default function HeroLines() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const reduceMotion = useMediaQuery(REDUCED_MOTION_QUERY);
+  const { isMobile, isTouch, lowPower } = useDevice();
+  // Phones, tablets and low-power devices draw at 1x: a quarter of the pixels at 2x.
+  const lite = isMobile || isTouch || lowPower;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -66,7 +70,7 @@ export default function HeroLines() {
     let time = 0;
 
     const build = () => {
-      const dpr = Math.min(window.devicePixelRatio, MAX_DPR);
+      const dpr = lite ? 1 : Math.min(window.devicePixelRatio, MAX_DPR);
       width = canvas.clientWidth;
       height = canvas.clientHeight;
       canvas.width = Math.round(width * dpr);
@@ -236,7 +240,7 @@ export default function HeroLines() {
       window.removeEventListener("pointerup", cancelHold);
       window.removeEventListener("pointercancel", onLeave);
     };
-  }, [reduceMotion]);
+  }, [reduceMotion, lite]);
 
   return <canvas aria-hidden="true" className="hero-lines" ref={canvasRef} />;
 }

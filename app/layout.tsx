@@ -4,6 +4,7 @@ import "./globals.css";
 import CanvasLayer from "../components/canvas/CanvasLayer";
 import ScrollProvider from "./scroll-provider";
 import Cursor from "../components/Cursor";
+import AskSynapse from "../components/AskSynapse";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -61,6 +62,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <CanvasLayer />
         <ScrollProvider>{children}</ScrollProvider>
+        <AskSynapse />
         <Cursor />
       </body>
     </html>

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { MOBILE_QUERY } from "./media";
+import { getDevice, subscribeDevice } from "./useDevice";
 
 type ScrollState = {
   // 0 at the Hero, 1 at Services, 2 at Work, 3 at Contact; fractions in between.
@@ -37,37 +37,30 @@ export const useIntroStore = create<IntroState>()(() => ({
 export type Quality = "high" | "low";
 
 type QualityState = {
-  // "low" = fewer particles, dpr 1, no bloom. Derived from the two inputs below.
+  // "low" = fewer particles, dpr 1, no bloom. Low on mobile, touch or low-power
+  // devices (see lib/useDevice.ts), or once the frame rate has proven too slow.
   quality: Quality;
-  // Small screen or touch-first device (MOBILE_QUERY). Kept live via matchMedia.
-  isMobile: boolean;
   // PerformanceMonitor saw fps stay below 50. Set once, never reset, so quality
   // doesn't flip back and forth.
   slowDevice: boolean;
 };
 
-const deriveQuality = ({ isMobile, slowDevice }: Omit<QualityState, "quality">): Quality =>
-  isMobile || slowDevice ? "low" : "high";
+const deriveQuality = (slowDevice: boolean): Quality => {
+  const { isMobile, isTouch, lowPower } = getDevice();
+  return isMobile || isTouch || lowPower || slowDevice ? "low" : "high";
+};
 
 export const useQualityStore = create<QualityState>()((set, get) => {
-  // On the client, read the media query up front (so the first 3D frame already uses
-  // the right quality) and follow later changes. On the server this stays "high"; the
+  // On the client, read the device up front (so the first 3D frame already uses the
+  // right quality) and follow later changes. On the server this stays "high"; the
   // value is only read by the client-only canvas, so there's no hydration mismatch.
-  let isMobile = false;
   if (typeof window !== "undefined") {
-    const media = window.matchMedia(MOBILE_QUERY);
-    isMobile = media.matches;
-    media.addEventListener("change", (event) => {
-      const next = { slowDevice: get().slowDevice, isMobile: event.matches };
-      set({ ...next, quality: deriveQuality(next) });
-    });
+    subscribeDevice(() => set({ quality: deriveQuality(get().slowDevice) }));
   }
-  const initial = { isMobile, slowDevice: false };
-  return { ...initial, quality: deriveQuality(initial) };
+  return { slowDevice: false, quality: deriveQuality(false) };
 });
 
 // Called by the PerformanceMonitor when the frame rate stays too low.
 export function markSlowDevice() {
-  const next = { isMobile: useQualityStore.getState().isMobile, slowDevice: true };
-  useQualityStore.setState({ ...next, quality: deriveQuality(next) });
+  useQualityStore.setState({ slowDevice: true, quality: "low" });
 }

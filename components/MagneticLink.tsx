@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import gsap from "gsap";
+import { useDevice } from "@/lib/useDevice";
 
 // How far outside the link (px) the pull starts, and how strongly it follows.
 const REACH = 60;
@@ -20,14 +21,14 @@ export default function MagneticLink({
 }) {
   const linkRef = useRef<HTMLAnchorElement>(null);
   const innerRef = useRef<HTMLSpanElement>(null);
+  const { finePointer } = useDevice();
 
   useEffect(() => {
     const link = linkRef.current;
     const inner = innerRef.current;
     if (!link || !inner) return;
-    const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!canHover || reduceMotion) return;
+    if (!finePointer || reduceMotion) return;
 
     // quickTo = reusable tween retargeted on every move, so the pull glides.
     const pull = { duration: 0.5, ease: "power3.out" };
@@ -69,7 +70,7 @@ export default function MagneticLink({
       gsap.killTweensOf([link, inner]);
       gsap.set([link, inner], { clearProps: "transform" });
     };
-  }, []);
+  }, [finePointer]);
 
   return (
     <a className={className} href={href} ref={linkRef}>

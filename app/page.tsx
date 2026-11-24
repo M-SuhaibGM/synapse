@@ -5,14 +5,10 @@ import MagneticLink from "@/components/MagneticLink";
 import SectionLabel from "@/components/SectionLabel";
 import Services from "@/components/Services";
 import Showreel from "@/components/Showreel";
+import SiteFooter from "@/components/SiteFooter";
+import SiteHeader from "@/components/SiteHeader";
 import Testimonials from "@/components/Testimonials";
 import TiltCard from "@/components/TiltCard";
-
-const navigation = [
-  { label: "Services", href: "#services" },
-  { label: "Work", href: "#work" },
-  { label: "Contact", href: "#contact" },
-];
 
 const projects = [
   {
@@ -41,21 +37,7 @@ const projects = [
 export default function Home() {
   return (
     <main>
-      <header className="site-header">
-        <a aria-label="Synapse home" className="wordmark" href="#hero">
-          synapse<span>®</span>
-        </a>
-        <nav aria-label="Main navigation" className="main-nav">
-          {navigation.map((item) => (
-            <a href={item.href} key={item.href}>
-              {item.label}
-            </a>
-          ))}
-        </nav>
-        <a className="header-cta" href="#contact">
-          Let&apos;s talk <span aria-hidden="true">↗</span>
-        </a>
-      </header>
+      <SiteHeader />
 
       <section aria-labelledby="hero-title" className="section hero" id="hero">
         <HeroLines />
@@ -159,6 +141,8 @@ export default function Home() {
             Tell us about it <span aria-hidden="true">↗</span>
           </MagneticLink>
         </div>
+        {/* Mobile only: empty space the 3D Earth sits in (see Earth.tsx). */}
+        <div aria-hidden="true" className="contact-globe" />
         <div className="contact-bottom">
           <p>We believe the best answers start with better questions.</p>
           <div className="contact-details">
@@ -167,6 +151,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <SiteFooter />
     </main>
   );
 }
