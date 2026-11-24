@@ -87,7 +87,8 @@ export default function Home() {
           <span>Scroll to explore <span aria-hidden="true">↓</span></span>
         </div>
         <p aria-hidden="true" className="hero-hint">
-          touch the lines · click &amp; hold to blast
+          touch the lines · <span className="hint-pointer">click</span>
+          <span className="hint-touch">touch</span> &amp; hold to blast
         </p>
       </section>
 

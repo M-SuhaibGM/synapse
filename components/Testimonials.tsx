@@ -73,8 +73,10 @@ export default function Testimonials() {
       // behind it moves one place forward. The last card stays.
       for (let step = 0; step < cards.length - 1; step += 1) {
         // rotationX -60: the card tips back around its bottom edge (transform-origin
-        // in CSS) as it lifts by 120% of its own height (yPercent) and fades.
-        timeline.to(cards[step], { rotationX: -60, yPercent: -120, opacity: 0 }, step);
+        // in CSS) as it lifts by 120% of its own height (yPercent). It fades out in
+        // the first half of the move, so it's gone before it reaches the heading.
+        timeline.to(cards[step], { rotationX: -60, yPercent: -120 }, step);
+        timeline.to(cards[step], { opacity: 0, duration: 0.5, ease: "power1.in" }, step);
         for (let behind = step + 1; behind < cards.length; behind += 1) {
           timeline.to(cards[behind], atDepth(behind - step - 1), step);
         }

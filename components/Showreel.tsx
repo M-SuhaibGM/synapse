@@ -13,6 +13,18 @@ const COARSE_STEP = 8; // load every 8th frame first, then fill the gaps
 const CONCURRENCY = 6; // parallel image requests
 const MAX_DPR = 1.5;
 
+const REEL_FPS = 20; // the frames were extracted at 20 fps
+
+// Where the subject is, as a fraction of the frame width, at a given reel time (s).
+// The reel holds on the centered Hero for 1.2s, then over 3.8s the subject eases
+// right to ~73% of the width (the Services position). Matching the crop to it keeps
+// the subject on screen when a portrait phone crops away most of the 16:9 frame.
+function subjectX(seconds: number) {
+  const t = Math.min(Math.max((seconds - 1.2) / 3.8, 0), 1);
+  const eased = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+  return 0.5 + 0.23 * eased;
+}
+
 const frameUrl = (frame: number) => `/reel/f_${String(frame).padStart(3, "0")}.jpg`;
 
 // Decoded frames, kept for the session (across remounts and mobile/desktop switches).
@@ -66,12 +78,15 @@ export default function Showreel() {
       const index = nearestLoaded(target);
       const image = images[index];
       if (!image || index === drawn) return;
-      // object-fit: cover — scale so the image fills the canvas on both axes, then
-      // center it; whatever overflows (top/bottom or left/right) is cropped.
+      // object-fit: cover — scale so the image fills the canvas on both axes;
+      // whatever overflows is cropped. Vertically it's centered. Horizontally it's
+      // centered on the subject, clamped so the image never leaves a gap at a side.
       const scale = Math.max(canvas.width / image.naturalWidth, canvas.height / image.naturalHeight);
       const width = image.naturalWidth * scale;
       const height = image.naturalHeight * scale;
-      context.drawImage(image, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+      const focus = subjectX((frames[index] - 1) / REEL_FPS);
+      const x = Math.min(Math.max(canvas.width / 2 - focus * width, canvas.width - width), 0);
+      context.drawImage(image, x, (canvas.height - height) / 2, width, height);
       drawn = index;
     };
     // At most one draw per animation frame, however many scroll/load events arrive.

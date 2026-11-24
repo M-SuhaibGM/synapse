@@ -27,7 +27,11 @@ export default function SectionGroup({ children }: { children: ReactNode }) {
     // only does the easing between the per-section positions.
     const timeline = gsap.timeline({
       paused: true,
-      defaults: { duration: 1, ease: "power2.inOut" },
+      // immediateRender: false: by default fromTo() applies its "from" values the
+      // moment it's created, so the last tween left the group at the Work position
+      // (left) until the first scroll. The group already starts at the Hero
+      // position (0, 0), so nothing needs to be applied up front.
+      defaults: { duration: 1, ease: "power2.inOut", immediateRender: false },
     });
     timeline
       // Hero (0) centered → Services (1) right

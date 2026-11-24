@@ -5,13 +5,16 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
-import { useScrollStore } from "@/lib/store";
+import { useSceneStore, useScrollStore } from "@/lib/store";
 
 gsap.registerPlugin(ScrollTrigger);
 
 // Each of these sections adds 0 → 1 to the overall progress as it scrolls in from the
 // bottom of the screen until its top reaches the top of the screen, giving 0-3 in total.
 const PROGRESS_SECTIONS = ["services", "work", "contact"];
+
+// Sections whose sticky panel is opaque and fills the screen while it's stuck.
+const COVERING_SECTIONS = ["disciplines", "showreel", "testimonials"];
 
 export default function ScrollProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
@@ -39,8 +42,30 @@ export default function ScrollProvider({ children }: { children: ReactNode }) {
     });
     publish();
 
+    // While one of these is stuck to the screen (its top at the top of the screen,
+    // its bottom not yet at the bottom), the 3D scene is fully hidden: pause it.
+    const covering = new Set<string>();
+    const coverTriggers = COVERING_SECTIONS.flatMap((id) => {
+      const section = document.getElementById(id);
+      if (!section) return [];
+      return [
+        ScrollTrigger.create({
+          trigger: section,
+          start: "top top",
+          end: "bottom bottom",
+          onToggle: (self) => {
+            if (self.isActive) covering.add(id);
+            else covering.delete(id);
+            useSceneStore.setState({ covered: covering.size > 0 });
+          },
+        }),
+      ];
+    });
+
     return () => {
       triggers.forEach((trigger) => trigger.kill());
+      coverTriggers.forEach((trigger) => trigger.kill());
+      useSceneStore.setState({ covered: false });
     };
   }, []);
 

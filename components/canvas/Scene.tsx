@@ -12,7 +12,7 @@ import {
 import { Bloom, EffectComposer, Noise, Vignette } from "@react-three/postprocessing";
 import { Perf } from "r3f-perf";
 import { MOBILE_PARTICLE_COUNT, PARTICLE_COUNT } from "@/lib/shapes";
-import { markSlowDevice, useIntroStore, useQualityStore } from "@/lib/store";
+import { markSlowDevice, useIntroStore, useQualityStore, useSceneStore } from "@/lib/store";
 import { REDUCED_MOTION_QUERY, useMediaQuery } from "@/lib/media";
 import CameraRig from "./CameraRig";
 import Earth from "./Earth";
@@ -29,6 +29,8 @@ export default function Scene({ onError }: { onError: (message: string | null) =
   // Start measuring only after the loader: building the shapes briefly blocks the main
   // thread, which would otherwise look like a slow device.
   const introStarted = useIntroStore((state) => state.started);
+  // Hidden behind an opaque section: stop the render loop (saves GPU and battery).
+  const covered = useSceneStore((state) => state.covered);
 
   return (
     <Canvas
@@ -36,6 +38,8 @@ export default function Scene({ onError }: { onError: (message: string | null) =
       // 1.5 is sharper on retina screens but ~2.25x the pixels to fill.
       dpr={lowQuality ? 1 : [1, 1.5]}
       gl={{ alpha: true, antialias: true }}
+      // frameloop "never" = don't draw new frames; the last one stays on the canvas.
+      frameloop={covered ? "never" : "always"}
     >
       {/* PerformanceMonitor averages the frame rate over a few seconds and calls
           onDecline if it stays below the lower bound (50 fps). The upper bound is

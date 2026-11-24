@@ -12,6 +12,16 @@ export const useScrollStore = create<ScrollState>()((set) => ({
   setProgress: (progress) => set({ progress }),
 }));
 
+type SceneState = {
+  // An opaque sticky section (Disciplines, Showreel, Testimonials) fills the screen,
+  // so the 3D scene behind it can't be seen and can stop rendering.
+  covered: boolean;
+};
+
+export const useSceneStore = create<SceneState>()(() => ({
+  covered: false,
+}));
+
 type IntroState = {
   // All section shapes are built (or failed), so the loader can reach 100%.
   shapesReady: boolean;

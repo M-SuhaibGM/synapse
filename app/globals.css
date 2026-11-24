@@ -449,6 +449,9 @@ main {
   flex-direction: column;
   overflow: hidden;
   padding: 110px 0 44px;
+  /* svh = the viewport height with the mobile browser toolbar showing, so the
+     progress bar at the bottom is never hidden behind the toolbar. */
+  height: 100svh;
   background:
     radial-gradient(ellipse at 83% 30%, rgb(76 201 240 / 5%), transparent 30rem),
     linear-gradient(180deg, transparent, rgb(255 255 255 / 1.2%), transparent);
@@ -498,6 +501,18 @@ main {
     radial-gradient(ellipse at 90% 0%, rgb(123 47 247 / 14%), transparent 60%),
     rgb(10 12 20 / 78%);
   backdrop-filter: blur(10px);
+}
+
+/* Phones / touch devices: no backdrop blur. Blurring the live 3D canvas behind
+   every card on every frame is expensive on mobile GPUs; a more opaque card
+   reads the same at this size. (Same breakpoint as MOBILE_QUERY in lib/media.ts.) */
+@media (max-width: 767px), (pointer: coarse) {
+  .service-card {
+    background:
+      radial-gradient(ellipse at 90% 0%, rgb(123 47 247 / 14%), transparent 60%),
+      rgb(10 12 20 / 92%);
+    backdrop-filter: none;
+  }
 }
 
 .service-card__top {
@@ -852,9 +867,16 @@ main {
   flex-direction: column;
   overflow: hidden;
   padding: 110px max(56px, calc((100vw - 1440px) / 2)) 56px;
+  height: 100svh;
   background:
     radial-gradient(ellipse at 50% 60%, rgb(123 47 247 / 9%), transparent 38rem),
     var(--background);
+}
+
+/* Above the deck, so a departing card passes behind the heading. */
+.testimonials__heading {
+  position: relative;
+  z-index: 2;
 }
 
 .testimonials__heading h2 {
@@ -1216,6 +1238,28 @@ main {
   .hero-hint {
     bottom: 50px;
     font-size: 8px;
+  }
+
+  /* On phones the 3D crystal sits behind the copy; a soft dark halo keeps the
+     smaller grey text readable over its bright facets. */
+  .hero .eyebrow,
+  .hero-description {
+    text-shadow: 0 1px 14px rgb(5 6 10 / 95%), 0 0 4px rgb(5 6 10 / 80%);
+  }
+}
+
+/* Hint wording: "click" with a mouse, "touch" on touch screens. */
+.hint-touch {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .hint-pointer {
+    display: none;
+  }
+
+  .hint-touch {
+    display: inline;
   }
 }
 
