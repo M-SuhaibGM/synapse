@@ -1,69 +1,209 @@
-import Image from "next/image";
+const navigation = [
+  { label: "Services", href: "#services" },
+  { label: "Work", href: "#work" },
+  { label: "Contact", href: "#contact" },
+];
+
+const services = [
+  {
+    number: "01",
+    name: "AI experiences",
+    description:
+      "Intelligent products that feel intuitive, useful, and unmistakably human.",
+    tags: "PRODUCT STRATEGY · AI UX",
+  },
+  {
+    number: "02",
+    name: "Digital products",
+    description:
+      "From first sketch to final pixel, we turn ambitious ideas into useful tools.",
+    tags: "DESIGN · DEVELOPMENT",
+  },
+  {
+    number: "03",
+    name: "Creative technology",
+    description:
+      "New ways to tell stories, connect systems, and make the complex feel simple.",
+    tags: "PROTOTYPING · R&D",
+  },
+];
+
+const projects = [
+  {
+    number: "01",
+    name: "A new way to know",
+    category: "AI · PRODUCT",
+    className: "project-card--orbit",
+    mark: "N",
+  },
+  {
+    number: "02",
+    name: "Signals in the noise",
+    category: "DATA · EXPERIENCE",
+    className: "project-card--signal",
+    mark: "S",
+  },
+  {
+    number: "03",
+    name: "The human interface",
+    category: "BRAND · DIGITAL",
+    className: "project-card--human",
+    mark: "H",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <main>
+      <header className="site-header">
+        <a aria-label="Synapse home" className="wordmark" href="#hero">
+          synapse<span>®</span>
+        </a>
+        <nav aria-label="Main navigation" className="main-nav">
+          {navigation.map((item) => (
+            <a href={item.href} key={item.href}>
+              {item.label}
+            </a>
+          ))}
+        </nav>
+        <a className="header-cta" href="#contact">
+          Let&apos;s talk <span aria-hidden="true">↗</span>
+        </a>
+      </header>
+
+      <section aria-labelledby="hero-title" className="section hero" id="hero">
+        <div className="hero-copy">
+          <p className="eyebrow"><span className="status-dot" /> Independent AI studio · Est. 2024</p>
+          <h1 id="hero-title">
+            Ideas into
+            <br />
+            <span className="text-gradient">intelligence.</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="hero-description">
+            We make thoughtful digital experiences for a world that won&apos;t
+            sit still.
+          </p>
+          <a className="text-link" href="#services">
+            Discover what we do <span aria-hidden="true">↓</span>
+          </a>
+        </div>
+        <div aria-hidden="true" className="hero-art">
+          <div className="hero-art__halo hero-art__halo--outer" />
+          <div className="hero-art__halo hero-art__halo--middle" />
+          <div className="hero-art__halo hero-art__halo--inner" />
+          <div className="hero-art__core">
+            <span />
+          </div>
+          <span className="hero-art__label hero-art__label--top">HUMAN + MACHINE</span>
+          <span className="hero-art__label hero-art__label--bottom">POTENTIAL, IN MOTION</span>
+          <span className="hero-art__spark hero-art__spark--one" />
+          <span className="hero-art__spark hero-art__spark--two" />
+        </div>
+        <div className="hero-footer">
+          <span>Independent thinking, applied.</span>
+          <span>Scroll to explore <span aria-hidden="true">↓</span></span>
+        </div>
+      </section>
+
+      <section
+        aria-labelledby="services-title"
+        className="section services"
+        id="services"
+      >
+        <div className="section-heading">
+          <p className="eyebrow">01 / What we do</p>
+          <h2 id="services-title">
+            Useful by design.
+            <br />
+            <span className="muted">Unexpected by nature.</span>
+          </h2>
+        </div>
+        <div className="service-list">
+          {services.map((service) => (
+            <article className="service-row" key={service.number}>
+              <span className="service-number">{service.number}</span>
+              <div className="service-main">
+                <h3>{service.name}</h3>
+                <p>{service.description}</p>
+              </div>
+              <span className="service-tags">{service.tags}</span>
+              <span aria-hidden="true" className="service-arrow">↗</span>
+            </article>
+          ))}
+        </div>
+        <div className="section-footnote">
+          <span>Good work starts with a good question.</span>
+          <span>Based everywhere <span className="accent">●</span></span>
+        </div>
+      </section>
+
+      <section aria-labelledby="work-title" className="section work" id="work">
+        <div className="section-heading work-heading">
+          <div>
+            <p className="eyebrow">02 / Selected work</p>
+            <h2 id="work-title">
+              Making the
+              <br />
+              <span className="muted">next feel natural.</span>
+            </h2>
+          </div>
+          <p className="work-intro">
+            A few signals from the future we&apos;re building with our partners.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
+        <div className="project-grid">
+          {projects.map((project) => (
+            <article
+              className={`project-card ${project.className}`}
+              key={project.number}
+            >
+              <div aria-hidden="true" className="project-art">
+                <span className="project-art__mark">{project.mark}</span>
+                <span className="project-art__ring project-art__ring--one" />
+                <span className="project-art__ring project-art__ring--two" />
+                <span className="project-art__ring project-art__ring--three" />
+                <span className="project-art__grid" />
+              </div>
+              <div className="project-meta">
+                <div>
+                  <p>{project.category}</p>
+                  <h3>{project.name}</h3>
+                </div>
+                <span className="project-number">{project.number}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="section-footnote">
+          <span>Curious what we could make together?</span>
+          <a href="#contact">Start a conversation <span aria-hidden="true">↗</span></a>
+        </div>
+      </section>
+
+      <section
+        aria-labelledby="contact-title"
+        className="section contact"
+        id="contact"
+      >
+        <p className="eyebrow"><span className="status-dot" /> 03 / Your move</p>
+        <div className="contact-content">
+          <h2 id="contact-title">
+            Have a good
+            <br />
+            <span className="text-gradient">question?</span>
+          </h2>
+          <a className="contact-link" href="mailto:hello@synapse.studio">
+            Tell us about it <span aria-hidden="true">↗</span>
           </a>
         </div>
-      </main>
-    </div>
+        <div className="contact-bottom">
+          <p>We believe the best answers start with better questions.</p>
+          <div className="contact-details">
+            <a href="mailto:hello@synapse.studio">hello@synapse.studio</a>
+            <span>Independent by nature. Connected by design.</span>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
