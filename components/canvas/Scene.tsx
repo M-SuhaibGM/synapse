@@ -1,12 +1,20 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { PerformanceMonitor } from "@react-three/drei";
+import {
+  Environment,
+  Lightformer,
+  PerformanceMonitor,
+  Sparkles,
+  Stars,
+} from "@react-three/drei";
 import { Bloom, EffectComposer, Noise, Vignette } from "@react-three/postprocessing";
 import { Perf } from "r3f-perf";
 import { MOBILE_PARTICLE_COUNT, PARTICLE_COUNT } from "@/lib/shapes";
 import { markSlowDevice, useIntroStore, useQualityStore } from "@/lib/store";
+import { REDUCED_MOTION_QUERY, useMediaQuery } from "@/lib/media";
 import CameraRig from "./CameraRig";
+import HeroCrystal from "./HeroCrystal";
 import Particles from "./Particles";
 import SectionGroup from "./SectionGroup";
 
@@ -14,6 +22,8 @@ import SectionGroup from "./SectionGroup";
 // R3F and postprocessing stay out of the initial JS bundle.
 export default function Scene({ onError }: { onError: (message: string | null) => void }) {
   const lowQuality = useQualityStore((state) => state.quality === "low");
+  const isMobile = useQualityStore((state) => state.isMobile);
+  const reduceMotion = useMediaQuery(REDUCED_MOTION_QUERY);
   // Start measuring only after the loader: building the shapes briefly blocks the main
   // thread, which would otherwise look like a slow device.
   const introStarted = useIntroStore((state) => state.started);
@@ -36,11 +46,46 @@ export default function Scene({ onError }: { onError: (message: string | null) =
           mostly vanish wherever there are no particles. */}
       <color attach="background" args={["#05060a"]} />
       <CameraRig />
-      <SectionGroup>
-        <Particles
-          count={lowQuality ? MOBILE_PARTICLE_COUNT : PARTICLE_COUNT}
-          onError={onError}
+      {/* Environment: renders the lightformers below into a 360° image once and uses it
+          as the light/reflections for shiny materials (the glass and chrome). Lightformers
+          are glowing panels/rings, like softboxes in a photo studio. Not shown as background. */}
+      <Environment resolution={lowQuality ? 128 : 256}>
+        <Lightformer form="rect" intensity={4} position={[0, 5, -6]} scale={[10, 3, 1]} />
+        <Lightformer
+          form="rect"
+          intensity={2.5}
+          color="#4cc9f0"
+          position={[-6, 1, 2]}
+          scale={[8, 2, 1]}
         />
+        <Lightformer form="ring" intensity={3} color="#7b2ff7" position={[5, -1, 3]} scale={4} />
+      </Environment>
+      <Stars
+        radius={60}
+        depth={40}
+        count={isMobile ? 1200 : 2400}
+        factor={3}
+        saturation={0}
+        fade
+        speed={reduceMotion ? 0 : 0.6}
+      />
+      {/* renderOrder 2: drawn after the glass, so sparkles in front of it aren't covered. */}
+      <Sparkles
+        count={130}
+        color="#4cc9f0"
+        scale={[9, 6, 4]}
+        size={2}
+        speed={reduceMotion ? 0 : 0.3}
+        opacity={0.6}
+        renderOrder={2}
+      />
+      <SectionGroup>
+        <HeroCrystal>
+          <Particles
+            count={lowQuality ? MOBILE_PARTICLE_COUNT : PARTICLE_COUNT}
+            onError={onError}
+          />
+        </HeroCrystal>
       </SectionGroup>
       {/* Post-processing: the scene is first drawn to an off-screen image, then each
           effect below runs over that whole image like a photo filter before it
