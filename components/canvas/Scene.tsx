@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import {
   Environment,
@@ -14,6 +15,7 @@ import { MOBILE_PARTICLE_COUNT, PARTICLE_COUNT } from "@/lib/shapes";
 import { markSlowDevice, useIntroStore, useQualityStore } from "@/lib/store";
 import { REDUCED_MOTION_QUERY, useMediaQuery } from "@/lib/media";
 import CameraRig from "./CameraRig";
+import Earth from "./Earth";
 import HeroCrystal from "./HeroCrystal";
 import Particles from "./Particles";
 import SectionGroup from "./SectionGroup";
@@ -86,6 +88,11 @@ export default function Scene({ onError }: { onError: (message: string | null) =
             onError={onError}
           />
         </HeroCrystal>
+        {/* Suspense: show nothing for the Earth until its textures have loaded,
+            instead of pausing the whole scene. */}
+        <Suspense fallback={null}>
+          <Earth />
+        </Suspense>
       </SectionGroup>
       {/* Post-processing: the scene is first drawn to an off-screen image, then each
           effect below runs over that whole image like a photo filter before it

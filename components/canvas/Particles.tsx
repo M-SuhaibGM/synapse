@@ -25,12 +25,13 @@ type ParticlesProps = {
   onError: (message: string | null) => void;
 };
 
-// One shape per section: Hero, Services, Work, Contact.
+// One shape per section: Hero, Services, Work, Contact. At Contact the particles pull
+// back into a sphere and fade out while the 3D Earth (Earth.tsx) grows in their place.
 const SECTION_SHAPES: Array<(count: number) => Float32Array | Promise<Float32Array>> = [
   (count) => sphere(count),
   (count) => text("AI", count),
   (count) => text("WORK", count),
-  (count) => text("?", count),
+  (count) => sphere(count),
 ];
 const LAST_FROM_INDEX = SECTION_SHAPES.length - 2;
 
@@ -51,6 +52,7 @@ function loadSectionShapes(count: number): Promise<Float32Array[]> {
 // How far each section leans from cyan (0) toward violet (1): Hero, Services, Work, Contact.
 // The value is blended smoothly between sections as you scroll.
 const SECTION_COLOR_SHIFT = [0, 0.35, 0.7, 1];
+const PARTICLE_OPACITY = 0.72;
 
 // Mouse repel. A raycaster shoots an invisible ray from the camera through the mouse
 // position into the 3D scene; we find where that ray hits a flat plane facing the
@@ -333,7 +335,7 @@ export default function Particles({ count, onError }: ParticlesProps) {
       uColorA: { value: new Color("#4cc9f0") },
       uColorB: { value: new Color("#7b2ff7") },
       uColorShift: { value: SECTION_COLOR_SHIFT[0] },
-      uOpacity: { value: 0.72 },
+      uOpacity: { value: PARTICLE_OPACITY },
     }),
     [],
   );
@@ -443,6 +445,12 @@ export default function Particles({ count, onError }: ParticlesProps) {
       morph,
     );
     material.uniforms.uTime.value = state.clock.elapsedTime;
+    // Fade out on the way into Contact, as the Earth appears.
+    const fade = reduceMotion
+      ? Number(progress > 2.5)
+      : MathUtils.smoothstep(progress, 2.4, 2.9);
+    material.uniforms.uOpacity.value = PARTICLE_OPACITY * (1 - fade);
+    pointsRef.current.visible = fade < 0.999;
 
     // Mouse: raycast to the z = 0 plane, then ease toward the hit point.
     const pointer = pointerRef.current;
