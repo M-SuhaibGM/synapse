@@ -1,3 +1,8 @@
+import HeroTitle from "@/components/HeroTitle";
+import MagneticLink from "@/components/MagneticLink";
+import SectionLabel from "@/components/SectionLabel";
+import TiltCard from "@/components/TiltCard";
+
 const navigation = [
   { label: "Services", href: "#services" },
   { label: "Work", href: "#work" },
@@ -74,11 +79,7 @@ export default function Home() {
       <section aria-labelledby="hero-title" className="section hero" id="hero">
         <div className="hero-copy">
           <p className="eyebrow"><span className="status-dot" /> Independent AI studio · Est. 2024</p>
-          <h1 id="hero-title">
-            Ideas into
-            <br />
-            <span className="text-gradient">intelligence.</span>
-          </h1>
+          <HeroTitle />
           <p className="hero-description">
             We make thoughtful digital experiences for a world that won&apos;t
             sit still.
@@ -111,7 +112,7 @@ export default function Home() {
         id="services"
       >
         <div className="section-heading">
-          <p className="eyebrow">01 / What we do</p>
+          <SectionLabel>01 / What we do</SectionLabel>
           <h2 id="services-title">
             Useful by design.
             <br />
@@ -140,7 +141,7 @@ export default function Home() {
       <section aria-labelledby="work-title" className="section work" id="work">
         <div className="section-heading work-heading">
           <div>
-            <p className="eyebrow">02 / Selected work</p>
+            <SectionLabel>02 / Selected work</SectionLabel>
             <h2 id="work-title">
               Making the
               <br />
@@ -153,7 +154,7 @@ export default function Home() {
         </div>
         <div className="project-grid">
           {projects.map((project) => (
-            <article
+            <TiltCard
               className={`project-card ${project.className}`}
               key={project.number}
             >
@@ -171,7 +172,7 @@ export default function Home() {
                 </div>
                 <span className="project-number">{project.number}</span>
               </div>
-            </article>
+            </TiltCard>
           ))}
         </div>
         <div className="section-footnote">
@@ -185,16 +186,16 @@ export default function Home() {
         className="section contact"
         id="contact"
       >
-        <p className="eyebrow"><span className="status-dot" /> 03 / Your move</p>
+        <SectionLabel><span className="status-dot" /> 03 / Your move</SectionLabel>
         <div className="contact-content">
           <h2 id="contact-title">
             Have a good
             <br />
             <span className="text-gradient">question?</span>
           </h2>
-          <a className="contact-link" href="mailto:hello@synapse.studio">
+          <MagneticLink className="contact-link" href="mailto:hello@synapse.studio">
             Tell us about it <span aria-hidden="true">↗</span>
-          </a>
+          </MagneticLink>
         </div>
         <div className="contact-bottom">
           <p>We believe the best answers start with better questions.</p>

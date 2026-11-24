@@ -64,6 +64,79 @@ body::before {
   pointer-events: auto;
 }
 
+.loader {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 max(56px, calc((100vw - 1440px) / 2)) 42px;
+  background: var(--background);
+}
+
+.loader__count {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: clamp(64px, 12vw, 160px);
+  font-weight: 400;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+}
+
+@media (max-width: 640px) {
+  .loader {
+    padding: 0 22px 25px;
+  }
+}
+
+/* Custom cursor (components/Cursor.tsx). Native cursor is hidden only once the
+   custom one is active, so touch devices and no-JS keep the normal cursor. */
+.has-custom-cursor,
+.has-custom-cursor * {
+  cursor: none !important;
+}
+
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--cyan);
+  box-shadow: 0 0 10px rgb(76 201 240 / 70%);
+}
+
+.cursor-ring {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgb(76 201 240 / 55%);
+}
+
+.shape-error {
+  position: fixed;
+  z-index: 20;
+  right: 12px;
+  bottom: 12px;
+  max-width: min(420px, calc(100vw - 24px));
+  padding: 10px 12px;
+  border: 1px solid rgb(255 100 100 / 35%);
+  border-radius: 6px;
+  background: rgb(25 10 14 / 94%);
+  color: #ffb4b4;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -435,6 +508,20 @@ main {
   min-width: 0;
 }
 
+/* Glow border in the accent color on hover. */
+.project-art {
+  transition:
+    border-color 300ms ease,
+    box-shadow 300ms ease;
+}
+
+.project-card:hover .project-art {
+  border-color: rgb(247 37 133 / 70%);
+  box-shadow:
+    0 0 28px rgb(247 37 133 / 32%),
+    inset 0 0 22px rgb(247 37 133 / 12%);
+}
+
 .project-art {
   position: relative;
   display: grid;
@@ -592,6 +679,14 @@ main {
 
 .contact-link span {
   color: var(--cyan);
+}
+
+/* Inner wrapper added by MagneticLink: keep the text/arrow layout and text color. */
+.contact-link .magnetic-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
+  color: inherit;
 }
 
 .contact-bottom {
