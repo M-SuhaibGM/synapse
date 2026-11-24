@@ -1,3 +1,14 @@
+import { cacheLife } from "next/cache";
+
+// With cacheComponents on, reading the clock during prerender is an error unless
+// it's cached. Capture the year in the static page and refresh it daily, so it
+// rolls over after New Year without a rebuild.
+async function CopyrightYear() {
+  "use cache";
+  cacheLife("days");
+  return new Date().getFullYear();
+}
+
 const links = [
   { label: "Services", href: "#services" },
   { label: "Work", href: "#work" },
@@ -46,7 +57,7 @@ export default function SiteFooter() {
       </div>
 
       <div className="site-footer__bottom">
-        <span>© {new Date().getFullYear()} Synapse Studio. All rights reserved.</span>
+        <span>© <CopyrightYear /> Synapse Studio. All rights reserved.</span>
         <a href="mailto:hello@synapse.studio">hello@synapse.studio</a>
       </div>
     </footer>
